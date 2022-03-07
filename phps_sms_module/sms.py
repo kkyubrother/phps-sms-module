@@ -1,4 +1,5 @@
 import datetime as dt
+import logging
 from typing import Union, Optional
 
 import phpserialize
@@ -14,6 +15,7 @@ class SMS:
     _name = "SMS"
     _server_url = SERVER_URL
     _print_debug_message: bool = False
+    logger: logging.Logger = logging.getLogger(__name__)
 
     def __init__(self, tr_id: str, tr_key: str, tr_from: Optional[str]):
         self.tr_id = tr_id
@@ -35,6 +37,13 @@ class SMS:
     @classmethod
     def set_print_debug_message(cls, is_print: bool):
         cls._print_debug_message = bool(is_print)
+    
+    @classmethod
+    def _logging(cls, *args):
+        if cls._print_debug_message:
+            cls.logger.log(" ".join(args))
+        else:
+            cls.logger.debug(" ".join(args))
 
     @classmethod
     def send(cls, tr_id: str, tr_key: str, tr_from: str, tr_to: str, tr_txt_msg: str, tr_date: Optional[dt.datetime] = None, tr_comment: Optional[str] = None) -> Union[ResultError, ResultSuccess]:
@@ -47,22 +56,11 @@ class SMS:
             "msg": tr_comment.encode("euc-kr") if tr_comment else "",
             "date": tr_date.strftime("%Y-%m-%d %H:%M:%S") if tr_date else 0
         })
-        if cls._print_debug_message:
-            print(cls._name, "::send", response.status_code, response.text)
+        cls._logging(cls._name, "::send", response.status_code, response.text)
         result = phpserialize.loads(response.content, decode_strings=True)
         if "status" in result and result["status"] == "success":
-            return ResultSuccess(
-                status=result["status"],
-                current_count=int(result["curcount"]),
-                phone_count=int(result["phonecount"]),
-                send_count=int(result["sendcount"]),
-                tr_num=int(result['tr_num']) if "tr_num" in result else None,
-                delete_count=None,
-            )
-        return ResultError(
-            status=int(result["status"]),
-            message=result["message"]
-        )
+            return ResultSuccess.create_result_success(result)
+        return ResultError.create_result_error(result)
 
     @classmethod
     def view(cls, tr_id: str, tr_key: str) -> Union[ResultError, ResultSuccess]:
@@ -71,22 +69,11 @@ class SMS:
             "authkey": tr_key,
             "type": "view"
         })
-        if cls._print_debug_message:
-            print(cls._name, "::view", response.status_code, response.text)
+        cls._logging(cls._name, "::view", response.status_code, response.text)
         result = phpserialize.loads(response.content, decode_strings=True)
         if "status" in result and result["status"] == "success":
-            return ResultSuccess(
-                status=result["status"],
-                current_count=int(result["curcount"]),
-                send_count=None,
-                phone_count=None,
-                tr_num=None,
-                delete_count=None,
-            )
-        return ResultError(
-            status=int(result["status"]),
-            message=result["message"]
-        )
+            return ResultSuccess.create_result_success(result)
+        return ResultError.create_result_error(result)
 
     @classmethod
     def cancel(cls, tr_id: str, tr_key: str, tr_num: int) -> Union[ResultError, ResultSuccess]:
@@ -96,20 +83,9 @@ class SMS:
             "tr_num": tr_num,
             "date": (dt.datetime.now() + dt.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
         })
-        if cls._print_debug_message:
-            print(cls._name, "::cancel", response.status_code, response.text)
+        cls._logging(cls._name, "::cancel", response.status_code, response.text)
         result = phpserialize.loads(response.content, decode_strings=True)
         if "status" in result and result["status"] == "success":
-            return ResultSuccess(
-                status=result["status"],
-                current_count=int(result["curcount"]),
-                delete_count=int(result["deletecount"]),
-                send_count=None,
-                phone_count=None,
-                tr_num=None
-            )
-        return ResultError(
-            status=int(result["status"]),
-            message=result["message"]
-        )
+            return ResultSuccess.create_result_success(result)
+        return ResultError.create_result_error(result)
     pass
