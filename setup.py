@@ -1,10 +1,12 @@
 import setuptools
 
-with open("README.md", "r") as fh:
+
+with open("README.md", "r", encoding='utf-8') as fh:
     long_description = fh.read()
 
+
 setuptools.setup(
-    name="phps_sms_module",  # Replace with your own username
+    name="php_school_sms_module",  # Replace with your own username
     version="0.0.2",
     author="kkyubrother",
     author_email="kkyubrother.0@gmail.com",
