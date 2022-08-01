@@ -23,7 +23,7 @@ class LMS:
     @classmethod
     def set_print_debug_message(cls, is_print: bool):
         cls._print_debug_message = bool(is_print)
-    
+
     @classmethod
     def _logging(cls, *args):
         if cls._print_debug_message:
@@ -33,11 +33,12 @@ class LMS:
 
     @classmethod
     def view(cls, tr_id: str, tr_key: str) -> Union[ResultError, ResultSuccess]:
-        response = requests.post(cls._server_url, {
+        data = {
             "adminuser": tr_id,
             "authkey": tr_key,
             "type": "view"
-        })
+        }
+        response = requests.post(cls._server_url, data)
         cls._logging(cls._name, "::view", response.status_code, response.text)
         result = phpserialize.loads(response.content, decode_strings=True)
         if "status" in result and result["status"] == "success":

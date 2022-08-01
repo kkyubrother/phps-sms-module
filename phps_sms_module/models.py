@@ -1,7 +1,5 @@
 from typing import NamedTuple, Optional
 
-from matplotlib.pyplot import cla
-
 
 class ResultError(NamedTuple):
     status: int
